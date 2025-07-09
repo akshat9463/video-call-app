@@ -1,11 +1,11 @@
 import { User } from "../models/userModel.js";
+import { Meeting} from "../models/meetingModel.js";
 import bcrypt, {hash} from "bcrypt";
 import httpStatus from "http-status";
 import crypto from 'crypto';
 
 const register = async (req,res)=>{
     const {name,username,password} = req.body;
-
     try {
         const existingUser = await User.findOne({username});
         if(existingUser){
@@ -33,7 +33,7 @@ const login = async(req,res)=>{
     const {username,password} = req.body;
 
     if (!username || !password) {
-        return res.status(400).json({message:"Please Provide."});
+        return res.status(httpStatus.BAD_REQUEST).json({message:"Please fill username and password."});
     }
 
     try{
@@ -52,7 +52,7 @@ const login = async(req,res)=>{
             return res.status(httpStatus.UNAUTHORIZED).json({message:"Incorrect username or password."});
         }
     } catch(e){
-        return res.status(500).json({message:"something went wrong."});
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:"something went wrong."});
     }
 }
 
@@ -62,10 +62,10 @@ const getUserHistory = async (req, res) => {
 
     try {
         const user = await User.findOne({ token: token });
-        const meetings = await Meeting.find({ user_id: user.username })
-        res.json(meetings)
+        const meetings = await Meeting.find({ user_id: user.username });
+        res.json(meetings);
     } catch (e) {
-        res.json({ message: `Something went wrong ${e}` })
+        res.json({ message: `Something went wrong ${e}` });
     }
 }
 

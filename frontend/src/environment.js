@@ -1,4 +1,4 @@
-let IS_PROD = true;
+let IS_PROD = false;
 const server = IS_PROD ?
     "https://video-call-app-0b6v.onrender.com" :
 
