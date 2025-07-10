@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import io from "socket.io-client";
-import { Badge, IconButton, TextField, Button } from "@mui/material";
+import { Badge, IconButton, TextField, Button, rgbToHex } from "@mui/material";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import VideocamOffIcon from "@mui/icons-material/VideocamOff";
 import CallEndIcon from "@mui/icons-material/CallEnd";
@@ -10,6 +10,7 @@ import ScreenShareIcon from "@mui/icons-material/ScreenShare";
 import StopScreenShareIcon from "@mui/icons-material/StopScreenShare";
 import ChatIcon from "@mui/icons-material/Chat";
 import server from "../environment"; // Assuming 'server' is still defined here
+import CloseIcon from "@mui/icons-material/Close";
 
 const server_url = server;
 
@@ -69,7 +70,7 @@ const customStyles = {
     flexDirection: "column",
     alignItems: "center",
     minHeight: "100vh",
-    // backgroundColor: '#1a1a1a',
+    backgroundColor: "rgb(1, 4, 48)",
     color: "white",
     padding: "20px",
     boxSizing: "border-box",
@@ -179,73 +180,72 @@ export default function VideoMeetComponent() {
   // Permissions and Local Stream Management
   // ---
 
- useEffect(() => {
-  const getPermissionsAndStream = async () => {
-    try {
-      const userMediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+  useEffect(() => {
+    const getPermissionsAndStream = async () => {
+      try {
+        const userMediaStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
 
-      // Save to global
-      window.localStream = userMediaStream;
+        // Save to global
+        window.localStream = userMediaStream;
 
-      // Set refs
-      if (lobbyVideoRef.current) {
-        lobbyVideoRef.current.srcObject = userMediaStream;
+        // Set refs
+        if (lobbyVideoRef.current) {
+          lobbyVideoRef.current.srcObject = userMediaStream;
+        }
+        if (meetingVideoRef.current) {
+          meetingVideoRef.current.srcObject = userMediaStream;
+        }
+
+        // Set states
+        setVideoEnabled(true);
+        setAudioEnabled(true);
+        setScreenAvailable(!!navigator.mediaDevices.getDisplayMedia);
+      } catch (error) {
+        console.error("Error accessing media devices:", error);
+
+        // Fallback: black screen + silent audio
+        const fallbackStream = new MediaStream([black(), silence()]);
+        window.localStream = fallbackStream;
+
+        if (lobbyVideoRef.current) {
+          lobbyVideoRef.current.srcObject = fallbackStream;
+        }
+        if (meetingVideoRef.current) {
+          meetingVideoRef.current.srcObject = fallbackStream;
+        }
+
+        setVideoEnabled(false);
+        setAudioEnabled(false);
+        setScreenAvailable(false);
       }
-      if (meetingVideoRef.current) {
-        meetingVideoRef.current.srcObject = userMediaStream;
+    };
+
+    getPermissionsAndStream();
+
+    return () => {
+      if (window.localStream) {
+        window.localStream.getTracks().forEach((track) => track.stop());
       }
-
-      // Set states
-      setVideoEnabled(true);
-      setAudioEnabled(true);
-      setScreenAvailable(!!navigator.mediaDevices.getDisplayMedia);
-
-    } catch (error) {
-      console.error("Error accessing media devices:", error);
-
-      // Fallback: black screen + silent audio
-      const fallbackStream = new MediaStream([black(), silence()]);
-      window.localStream = fallbackStream;
-
-      if (lobbyVideoRef.current) {
-        lobbyVideoRef.current.srcObject = fallbackStream;
+      if (socketRef.current) {
+        socketRef.current.disconnect();
       }
-      if (meetingVideoRef.current) {
-        meetingVideoRef.current.srcObject = fallbackStream;
+      for (const id in connections) {
+        if (connections[id]) {
+          connections[id].close();
+          delete connections[id];
+        }
       }
+    };
+  }, []);
 
-      setVideoEnabled(false);
-      setAudioEnabled(false);
-      setScreenAvailable(false);
+  useEffect(() => {
+    if (!askForUsername && meetingVideoRef.current && window.localStream) {
+      meetingVideoRef.current.srcObject = window.localStream;
     }
-  };
-
-  getPermissionsAndStream();
-
-  return () => {
-    if (window.localStream) {
-      window.localStream.getTracks().forEach((track) => track.stop());
-    }
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-    }
-    for (const id in connections) {
-      if (connections[id]) {
-        connections[id].close();
-        delete connections[id];
-      }
-    }
-  };
-}, []);
-
-useEffect(() => {
-  if (!askForUsername && meetingVideoRef.current && window.localStream) {
-    meetingVideoRef.current.srcObject = window.localStream;
-  }
-}, [askForUsername]);
+  }, [askForUsername]);
 
   // ---
   // Media Control Functions
@@ -644,6 +644,15 @@ useEffect(() => {
             <div style={customStyles.chatRoom}>
               <div style={customStyles.chatContainer}>
                 <h1 style={{ color: "white" }}>Chat</h1>
+                <IconButton
+                  onClick={() => {
+                    setShowChatModal(!showChatModal);
+                    if (!showChatModal) setNewMessagesCount(0);
+                  }}
+                  style={{ color: "white" }}
+                >
+                  <CloseIcon />
+                </IconButton>
                 <div style={customStyles.chattingDisplay} ref={chatDisplayRef}>
                   {messages.length > 0 ? (
                     messages.map((item, index) => (
