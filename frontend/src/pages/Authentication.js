@@ -166,7 +166,7 @@ export default function Authentication() {
             <Snackbar
 
                 open={open}
-                autoHideDuration={4000}
+                autoHideDuration={3000}
                 message={message}
             />
 

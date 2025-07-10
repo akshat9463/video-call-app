@@ -57,12 +57,12 @@ function HomeComponent() {
                     <div>
                         <h2>Providing Quality Video Call Just Like Quality Education</h2>
 
-                        <div>
+                        <div className='leftDiv'>
 
-                            <TextField onChange={e => setMeetingCode(e.target.value)} id="outlined-basic" label="Meeting Code" variant="outlined"
-                            style={{marginTop:"2rem", width:"100px"}} />
+                            <TextField className='textField' onChange={e => setMeetingCode(e.target.value)} id="outlined-basic" label="Meeting Code" variant="outlined"
+                            style={{marginTop:"2rem"}} />
                             <Button onClick={handleJoinVideoCall} variant='contained'
-                            style={{marginTop:"2rem"}}>Join</Button>
+                            style={{marginTop:"2.5rem"}} className='btn'>Join</Button>
 
                         </div>
                     </div>

@@ -79,6 +79,9 @@
   display: flex;
   align-items: center;
 }
+.leftDiv .btn{
+  margin-left: 2rem;
+}
 
 .rightPanel {
   display: flex;
@@ -183,6 +186,9 @@
 }
 .leftPanel h2{
   font-size: 1.2rem;
+}
+.leftDiv .textField{
+  width: 100px;
 }
 
 .rightPanel {

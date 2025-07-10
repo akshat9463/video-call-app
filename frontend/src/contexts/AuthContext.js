@@ -4,6 +4,7 @@ import { createContext, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import server from "../environment"
 
+// react context to use auth functions and data globally.
 export const AuthContext = createContext({});
 
 const client = axios.create({
